@@ -294,6 +294,51 @@ Task Distribution is shown in Table 2. Each member has his own main role, but si
     \end{enumerate}
 \end{enumerate}
 
+\section{Architecture Design \& Implementation}
+\subsection{Overall Architecture}
+- Soriham is divided into two main modules: the frontend and the backend (see Figure). The frontend is compatible with its own git and is available on Android or IOS devices. Send a request to the backend server to get data when you are connected to the Internet using this application(program).
+
+- The backend server has two endpoints (who, message). The server performs the necessary tasks based on what AI Speaker requests. If a user uses a request to “save”, the backend server identifies who it is with a parameter called who, determines which message it is, and stores it in the database. For example, when a father saves the message "Eat dinner" on a server, “who” is the father, and “message” is "Eat dinner" and then saves it.
+In addition, two endpoints (who, message) are also used when using the message import function. When a user requests to retrieve a message, the backend server identifies who came with a parameter called “who”, requests the stored message to the TTS server, converts it into the person's TTS, and responds to the backend server.
+
+- When response from the TTS server arrives on the backend server, the server responds to the data back to the AI Speaker and processes it in a way that is played by the AI Speaker.\\
+
+\subsection{Directory Organization}
+- Not Yet\\
+
+\subsection{Modules}
+\begin{enumerate}
+    \item Module 1. Database\\
+    - The database that is used for Soriham is a MySQL-server database and it is connected to the server. In application, all of the messages that are written will be sent to the database. All of the messages will be sent with a tag that a user-selected. If the user selected a certain voice, a message will be tagged according to it. The data that is stored in the database will be sent to the TTS API. According to a tag, different voices will be converted to mp3 files. To let NUGUplayBuilder play the file, it will be converted to an m3u8 file. When the user chooses to use their own voice, the message data will be sent to a Speech to Text Machine Learning module, and it will be converted to a user's voice m3u8 file.  After the files are converted, it will wait for the signal from NUGUplayBuilder. When NUGUplayBuilder asks for the data, the converted data will be sent to NUGUplayBuilder.\\
+    \item Module 2. TTS (Text-to-Speech)\\
+    - Since a database cannot be directly converted to Speech, TTS API is needed. TTS can turn text into natural-sounding speech in 220+ voices across 40+ languages and variants with an API powered by Google's machine learning technology.\\
+    \item Module 3. Machine Learning\\
+    - Soriham uses two machine learning learning models: Glow-TTS and HiFiGAN-TTS for voice learning. The user directly records a certain amount of sentence files through the microphone to produce base data. Machine learning is conducted based on the produced recording file. It determines the overall voice tone of the user through Glow-TTS. Use HiFiGan-TTS to create a model that is closer to the user's actual voice. As the time of machine learning increases, it gets closer and closer to the user's actual voice. After the learning is completed, the two learned data are synthesized to extract the learning results of the user's voice based on the data.\\
+    \item Module 4. App\\
+    - Soriham application is oriented for both Android Ios. We use react-native for our development IDE. There are Login, Menu, Voice Setting, and Send message contents in the application. The application allows users to communicate with the Soriham. It receives a message that the speaker spoke on the speaker when the speaker is in Soriham mode. The message from a speaker will be shown on the application. And when the user sends a message through an application, it will be sent to a speaker and reads when the user asks. The application allows users to choose voices. When the user chooses a certain voice, the text message will be converted to it.\\
+    \item Module 5. NUGU Playbuilder\\
+    - We use Nugu Play Builder to connect intents from users with actions to run on speakers. There are two types of intents: SoundRecordIntent and SoundPlayIntent. 'SoundRecordIntent' executes 'SoundRecordAction'. SoundRecordIntent has an entity called "VOICE\_TYPE" to decide which voice of people who trained their voice into the machine learning model is used later. "SoundPlayIntent" executes "SoundPlayAction" and has a parameter called "sound\_type," which is consistent with "VOICE\_TYPE" set by "SoundRecordAction." The message will be played with the voice you specified when recording the voice.\\
+\end{enumerate}
+
+\section{Use Cases}
+
+\subsection{User Case 1: Leave Messages Using Voice}
+\begin{figure}[ht!]
+    \centerline{\includegraphics[width=9cm]{img/usecase 1.png}}
+    \caption{User Case 1}
+\end{figure}
+- Users can leave messages using speakers at any time they want. After the user wakes up the speaker first, the user reveals his intention by saying, "I want to leave a message." Then, the speaker grasps the intention and takes 'SoundRecordAction'. When the user leaves a message he or she wants to leave, the voice turns into text(Speech-to-Text) and moves on to the server. The text is changed to the user's voice learned through the learning model and turns into the voice (Text-to-Speech). The voice file is stored in cloud storage.\\
+
+\subsection{User Case 2: Leave Messages Using Text in App}
+- Users can also leave messages not only using voice, but also text. If you write down the message you want to leave on the application as text and press the send button, the text will be delivered to the learning model. Text is changed to the user's voice through a learning model and stored as a voice file(it can be 'mp3' or 'm3u8').\\
+
+\subsection{User Case 3: Playing Messages Left Before}
+\begin{figure}[ht!]
+    \centerline{\includegraphics[width=9cm]{img/usecase 3.png}}
+    \caption{User Case 3}
+\end{figure}
+- The user can wake up the speaker at any time to check the previously left message. After the user wakes up the speaker, he reveals his intention to "play the message." Then, the speaker understands the intention and takes 'SoundPlayAction'. The URL of the message left before in the storage is retrieved and played using the speaker's audio directive function.\\
+
 \begin{thebibliography}{00}
 \bibitem{b1} https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3361774/.
 \end{thebibliography}
